@@ -258,16 +258,19 @@ function renderMonths(){const m=$("months");m.innerHTML="";
   m.appendChild(col);setTimeout(()=>{col.querySelector(".mbar").style.height=h+"%";},60);}}
 const ms=$("monthSel");MNF.forEach((n,i)=>{const o=document.createElement("option");o.value=i;o.textContent=n;ms.appendChild(o);});
 ms.value=month;ms.onchange=()=>{month=+ms.value;render();};
-render();
-(async()=>{
+async function loadLive(first){
  try{
   const r=await fetch("painel-corrida-da-meta-dados.json?t="+Date.now(),{cache:"no-store"});
   if(!r.ok)throw new Error("HTTP "+r.status);
   const d=await r.json();
   if(!Array.isArray(d.total)||d.total.length!==12)throw new Error("JSON inválido");
-  DATA=d;SOURCE="drive";month=lastData();ms.value=month;render();
- }catch(e){console.warn("Corrida da Meta: cópia embutida —",e.message);render();}
-})();
+  const mudou = d.updatedAt!==DATA.updatedAt;
+  DATA=d;SOURCE="drive";
+  if(first){month=lastData();ms.value=month;}
+  if(first||mudou) render();
+ }catch(e){ if(first){console.warn("Corrida da Meta: cópia embutida —",e.message);render();} }
+}
+render(); loadLive(true); setInterval(function(){loadLive(false);},60000);
 </script>
 </body>
 </html>
